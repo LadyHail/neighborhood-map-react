@@ -28,7 +28,6 @@ class Search extends React.Component {
                     value={this.state.query}
                     onChange={(event => this.updateQuery(event.target.value))}
                 />
-                <button className="search-button">Filter</button>
             </span>
             )
     }

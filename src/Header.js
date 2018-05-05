@@ -2,7 +2,7 @@
 
 class Header extends React.Component {
     toggleList = () => {
-        var list = document.getElementById('places-list');
+        var list = document.getElementById('list-aside');
         var listStyle = window.getComputedStyle(list);
         if (listStyle.getPropertyValue('display') === 'block') {
             (list.style.display = 'none')

@@ -29,7 +29,7 @@ class App extends Component {
       <div className="App">
             <Header />
             <main>
-                <aside>
+                <aside id="list-aside">
                     <Search coordinates={this.state.coordinates} updateCoords={this.updateCoords}/>
                     <ol className="places-list" id="places-list"></ol>
                 </aside>

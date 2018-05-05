@@ -50,11 +50,12 @@ class GoogleMap extends React.Component {
     }
 
     populatePlaces() {
-        this.markers;
         if (this.markers && this.markers.length !== 0) {
             this.markers.forEach(function (marker) {
                 marker.setMap(null);
             });
+        } else {
+            this.markers = [];
         }
         var _this = this;
         var markers = [];
