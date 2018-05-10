@@ -4,6 +4,13 @@ import ReactDOM from 'react-dom';
 
 // Source: http://www.klaasnotfound.com/2016/11/06/making-google-maps-work-with-react/
 class GoogleMap extends React.Component {
+    constructor(props) {
+        super(props);
+        this.markers = [];
+        this.map = {};
+        this.infoWindow = {};
+    }
+
     state = {
         coordinates: [],
         isInitialized: false,
@@ -27,6 +34,7 @@ class GoogleMap extends React.Component {
             zoom: 8
         });
         this.map = map;
+        this.infoWindow = new google.maps.InfoWindow();
         this.populatePlaces();
         this.setState({ isInitialized: true });
     };
@@ -39,18 +47,15 @@ class GoogleMap extends React.Component {
         ref.parentNode.insertBefore(script, ref);
     }
 
-    populateInfoWindow(marker, infoWindow, map) {
-        if (infoWindow.marker !== marker) {
-            infoWindow.marker = marker;
-            infoWindow.setContent('<div class="info-window">' + this.state.placeInfo + '</div>');
-            infoWindow.open(map, marker);
-            infoWindow.addListener('closeclick', function () {
-                infoWindow.marker = null;
-            })
+    populateInfoWindow(marker) {
+        if (this.infoWindow.marker !== marker) {
+            this.infoWindow.marker = marker;
+            this.infoWindow.setContent('<div class="info-window">' + this.state.placeInfo + '</div>');
+            this.infoWindow.open(this.map, marker);
         }
     }
 
-    requestMoreInfo = (marker, infoWindow, map) => {
+    requestMoreInfo = (marker) => {
         var info = '';
         fetch('https://en.wikipedia.org/w/api.php?format=json&action=query&prop=extracts&exintro=&explaintext=&origin=*&titles=' + marker.title, {
             method: 'POST',
@@ -65,33 +70,55 @@ class GoogleMap extends React.Component {
         }).then(data => {
             for (var [key, value] of Object.entries(data.query.pages)) {
                 if (key !== '-1') {
-                    console.log(value.extract);
+                    console.log(value.pageid);
                     info = value.extract;
                     this.setState({ placeInfo: info });
-                    this.populateInfoWindow(marker, infoWindow, map)
+                    this.populateInfoWindow(marker)
                 } else {
                     this.setState({ placeInfo: 'It\'s mystery place! We cannot get more information!' });
-                    this.populateInfoWindow(marker, infoWindow, map);
+                    this.populateInfoWindow(marker);
                 }
                 }
             }).catch(error => {
-
+                this.setState({ placeInfo: 'Oops... Something went wrong.' });
+                this.populateInfoWindow(marker);
             });           
     };
 
     populatePlaces() {
-        if (this.markers && this.markers.length !== 0) {
+        this.clearMarkersMap();
+        var _this = this;       
+        var placesList = this.setPlacesList();
+        this.setMarkers(placesList);
+        
+        placesList.addEventListener('click', function (event) {
+            var placeId = event.target.id;
+            _this.map.setZoom(12);
+            var match = (_this.markers.filter(m => m.title === placeId));
+            _this.map.setCenter(match[0].position);
+            _this.requestMoreInfo(match[0]);
+        });
+    }
+
+    clearMarkersMap = () => {
+        if (this.markers.length !== 0) {
             this.markers.forEach(function (marker) {
                 marker.setMap(null);
             });
-        } else {
-            this.markers = [];
         }
-        var _this = this;
-        var markers = [];
-        var globalInfoWindow = new google.maps.InfoWindow();
+    }
+
+    setPlacesList = () => {
         var placesList = document.getElementById('places-list');
         placesList.innerHTML = '';
+        var newPlacesList = placesList.cloneNode(true);
+        placesList.parentNode.replaceChild(newPlacesList, placesList);
+        return newPlacesList;
+    }
+
+    setMarkers = (placesListElement) => {
+        var _this = this;
+        var markers = [];
         this.state.coordinates.forEach(function (place) {
             var marker = new google.maps.Marker({
                 position: place.location,
@@ -100,22 +127,20 @@ class GoogleMap extends React.Component {
             });
             markers.push(marker);
             marker.addListener('click', function () {
-                _this.requestMoreInfo(marker, globalInfoWindow, _this.map);
+                _this.requestMoreInfo(marker);
             });
-            var placeItem = document.createElement('li');
-            placeItem.className = 'place';
-            placeItem.id = place.title;
-            placeItem.textContent = place.title;
-            placesList.appendChild(placeItem);
+            var placeItem = _this.createPlaceItemElement(place.title);
+            placesListElement.appendChild(placeItem);
         });
         _this.markers = markers;
-        placesList.addEventListener('click', function (event) {
-            var placeId = event.target.id;
-            _this.map.setZoom(12);
-            var match = (markers.filter(m => m.title === placeId));
-            _this.map.setCenter(match[0].position);
-            _this.requestMoreInfo(match[0], globalInfoWindow, _this.map);
-        });
+    }
+
+    createPlaceItemElement = (placeTitle) => {
+        var placeItem = document.createElement('li');
+        placeItem.className = 'place';
+        placeItem.id = placeTitle;
+        placeItem.textContent = placeTitle;
+        return placeItem;
     }
 
     render() {
