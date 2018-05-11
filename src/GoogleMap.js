@@ -47,21 +47,47 @@ class GoogleMap extends React.Component {
         ref.parentNode.insertBefore(script, ref);
     }
 
+    getInfoWindowContent = (title) => {
+        var content = this.state.placeInfo.slice(0, 150);
+        var link = '<a href="https://en.wikipedia.org/wiki/' + title + '">Learn more</a>';
+        return ('<div class="info-window">' + content + '...' + link + '</div>');
+    }
+
     populateInfoWindow(marker) {
         if (this.infoWindow.marker !== marker) {
             this.infoWindow.marker = marker;
-            this.infoWindow.setContent('<div class="info-window">' + this.state.placeInfo + '</div>');
+            this.infoWindow.setContent(this.getInfoWindowContent(marker.title));
             this.infoWindow.open(this.map, marker);
         }
     }
 
     requestMoreInfo = (marker) => {
         var info = '';
-        fetch('https://en.wikipedia.org/w/api.php?format=json&action=query&prop=extracts&exintro=&explaintext=&origin=*&titles=' + marker.title, {
-            method: 'POST',
-            headers: new Headers({
-                'Api-User-Agent': 'ladyhail@outlook.com'
-            })
+        const FETCH_TIMEOUT = 2000;
+        let isTimedOut = false;
+
+        new Promise(function (resolve, reject) {
+            const timeout = setTimeout(function () {
+                isTimedOut = true;
+                reject(new Error('Request timed out!'));
+            }, FETCH_TIMEOUT);
+        
+            fetch('https://en.wikipedia.org/w/api.php?format=json&action=query&prop=extracts&exintro=&explaintext=&origin=*&titles=' + marker.title, {
+                method: 'POST',
+                headers: new Headers({
+                    'Api-User-Agent': 'MyPlaces'
+                })
+            }).then(function (response) {
+                clearTimeout(timeout);
+                if (!isTimedOut) {
+                    resolve(response);
+                }
+            }).catch(function (error) {
+                if (isTimedOut) {
+                    return;
+                }
+                reject(error);
+            });
         }).then(response => {
             if (response.ok) {
                 return response.json();
@@ -70,12 +96,11 @@ class GoogleMap extends React.Component {
         }).then(data => {
             for (var [key, value] of Object.entries(data.query.pages)) {
                 if (key !== '-1') {
-                    console.log(value.pageid);
                     info = value.extract;
                     this.setState({ placeInfo: info });
                     this.populateInfoWindow(marker)
                 } else {
-                    this.setState({ placeInfo: 'It\'s mystery place! We cannot get more information!' });
+                    this.setState({ placeInfo: 'It\'s mystery place! We couldn\'t get more information!' });
                     this.populateInfoWindow(marker);
                 }
                 }

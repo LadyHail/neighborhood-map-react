@@ -20,7 +20,6 @@ class Search extends React.Component {
 
     render() {
         return (
-            <span>
                 <input
                     type="text"
                     className="search-box"
@@ -28,7 +27,6 @@ class Search extends React.Component {
                     value={this.state.query}
                     onChange={(event => this.updateQuery(event.target.value))}
                 />
-            </span>
             )
     }
 }

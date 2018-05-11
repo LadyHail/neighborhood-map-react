@@ -1,3 +1,9 @@
+body {
+    max-width: 1280px;
+    margin: 0 auto 0 auto;
+    height: auto;
+}
+
 .header {
     width: 100%;
     text-align: center;
@@ -12,6 +18,16 @@
 
 .menu-btn {
     float: left;
+    margin: 10px 0 0 20px;
+    cursor: pointer;
+    background-color: #6c757d;
+    color: #f0f2ef;
+    border-color: #6c757d;
+    font-weight: 400;
+    text-align: center;
+    border: 1px solid transparent;
+    line-height: 1.5;
+    border-radius: 0.25rem;
 }
 
 main {
@@ -21,7 +37,7 @@ main {
 
 #map {
     width: 70%;
-    height: 500px;
+    height: 800px;
 }
 
 aside {
@@ -32,26 +48,34 @@ aside {
 
 .search-box {
     text-align: center;
-    width: 70%;
-}
-
-.search-button {
-    width: 50px;
+    width: 90%;
+    margin-left: 20px;
+    background-color: #f0f2ef;
+    color: #202a25;
 }
 
 .places-list {
     list-style: none;
     text-align: left;
-    margin: 0;
-    margin-top: 10px;
+    margin: 10px 0;
     padding-left: 20px;
     display: block;
 }
 
 .place {
-    
+    cursor: pointer;
+    width: 80%;
+    margin: 10px;
+    padding: 5px 5px 5px 10px;
+    border: 1px outset grey;
+    border-radius: 20px;
 }
 
-.info-window {
+    .place:hover {
+        background-color: #494949;
+    }
 
+.info-window {
+    width: 200px;
+    height: auto;
 }
