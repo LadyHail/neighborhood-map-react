@@ -1,5 +1,6 @@
 ﻿import React from 'react';
 import ReactDOM from 'react-dom';
+import MarkerIcon from './marker-icon.png';
 /* global google */
 
 // Source: http://www.klaasnotfound.com/2016/11/06/making-google-maps-work-with-react/
@@ -122,6 +123,7 @@ class GoogleMap extends React.Component {
             var match = (_this.markers.filter(m => m.title === placeId));
             _this.map.setCenter(match[0].position);
             _this.requestMoreInfo(match[0]);
+            match[0].setAnimation(google.maps.Animation.DROP);
         });
     }
 
@@ -148,7 +150,8 @@ class GoogleMap extends React.Component {
             var marker = new google.maps.Marker({
                 position: place.location,
                 map: _this.map,
-                title: place.title
+                title: place.title,
+                icon: MarkerIcon
             });
             markers.push(marker);
             marker.addListener('click', function () {

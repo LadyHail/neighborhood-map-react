@@ -35,6 +35,11 @@ class App extends Component {
                 </aside>
                 <GoogleMap coordinates={this.state.filteredCoords} />
             </main>
+            <footer>
+                <p>Additional information about places is provided by
+                    <a href="https://en.wikipedia.org" className="data-provider"> Wikipedia</a>.
+                </p>
+            </footer>
       </div>
     );
   }
