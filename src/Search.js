@@ -1,10 +1,17 @@
 ﻿import React from 'react';
+import PropTypes from 'prop-types';
 
 class Search extends React.Component {
+    static propTypes = {
+        coordinates: PropTypes.array.isRequired,
+        updateCoords: PropTypes.func.isRequired
+    }
+
     state = {
         query: ''
     }
 
+    // Update query everytime user enter the character.
     updateQuery = (query) => {
         var places;
         if (query) {

@@ -16,10 +16,12 @@ class App extends Component {
         filteredCoords: [],
     }
 
+    // Initialize coordinates that are displayed on the page.
     componentDidMount = () => {
         this.setState({ filteredCoords: this.state.coordinates });
     }
 
+    // Update coordinates from Search component.
     updateCoords = (places) => {
         this.setState({ filteredCoords: places });
     }
