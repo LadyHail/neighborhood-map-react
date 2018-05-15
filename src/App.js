@@ -33,7 +33,7 @@ class App extends Component {
             <main>
                 <aside id="list-aside">
                     <Search coordinates={this.state.coordinates} updateCoords={this.updateCoords}/>
-                    <ol className="places-list" id="places-list"></ol>
+                    <ul className="places-list" id="places-list" role="list"></ul>
                 </aside>
                 <GoogleMap coordinates={this.state.filteredCoords} />
             </main>

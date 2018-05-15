@@ -9,12 +9,13 @@ class GoogleMap extends React.Component {
     constructor(props) {
         super(props);
         this.markers = [];
+        this.activeMarker = {};
         this.map = {};
         this.infoWindow = {};
     }
 
     static propTypes = {
-        coordinates: PropTypes.array.isRequired
+        coordinates: PropTypes.array.isRequired,
     }
 
     state = {
@@ -37,15 +38,61 @@ class GoogleMap extends React.Component {
 
     // Initialize Google Map
     initMap = () => {
-        var map = new google.maps.Map(ReactDOM.findDOMNode(this.refs.map), {
+        const map = new google.maps.Map(ReactDOM.findDOMNode(this.refs.map), {
             center: { lat: 50.905227, lng: 16.086340 },
             zoom: 8
         });
         this.map = map;
         this.infoWindow = new google.maps.InfoWindow();
-        this.populatePlaces();
+        this.initMarkers();
+        this.setPlacesList();
         this.setState({ isInitialized: true });
     };
+
+    // Initialize markers and save them to variable.
+    initMarkers = () => {
+        const _this = this;
+        this.state.coordinates.forEach(function (place) {
+            const marker = new google.maps.Marker({
+                position: place.location,
+                map: _this.map,
+                title: place.title,
+                icon: MarkerIcon
+            });
+            _this.markers.push(marker);
+            marker.addListener('click', function () {
+                _this.activeMarker = marker;
+                _this.requestMoreInfo(marker);
+            });
+        });
+    }
+
+    // Setup places list and add event listener to the list.
+    setPlacesList = () => {
+        const _this = this;
+        const placesList = this.clearPlacesList();
+        this.state.coordinates.forEach(function (place) {
+            _this.addPlaceToList(place, placesList);
+        });
+
+        placesList.addEventListener('click', function (event) {
+            if (event.target.className === 'place') {                
+                const placeId = event.target.id;
+                _this.map.setZoom(12);
+                const match = _this.markers.filter(m => m.title === placeId);
+                _this.map.setCenter(match[0].position);
+                _this.activeMarker = match[0];
+                _this.requestMoreInfo(match[0]);
+            }
+        });
+    }
+
+    // Setup animation for active marker.
+    setActiveMarkerAnimation = (value) => {
+        if (Object.keys(this.activeMarker).length !== 0) {
+                this.activeMarker.setAnimation(value);
+        }
+    }
 
     // Load the script that refer to google maps
     loadJS = (src) => {
@@ -74,9 +121,11 @@ class GoogleMap extends React.Component {
 
     // Get more information about place from Wikipedia EN.
     requestMoreInfo = (marker) => {
+        this.setActiveMarkerAnimation(null);
         var info = '';
         const FETCH_TIMEOUT = 2000;
         let isTimedOut = false;
+        var _this = this;
 
         new Promise(function (resolve, reject) {
             const timeout = setTimeout(function () {
@@ -107,55 +156,34 @@ class GoogleMap extends React.Component {
             }
             throw new Error('Network response was not ok!');
             }).then(data => {
-            // data returns object that contains pageid which is unique for each article at Wikipedia.
-            // Below code go through all properties of the object, then set info variable with proper data.
-            for (var [key, value] of Object.entries(data.query.pages)) {
-                if (key !== '-1') {
-                    info = value.extract;
-                    this.setState({ placeInfo: info });
-                    this.populateInfoWindow(marker)
+            // data returns object that contains pageid which is unique for each article at Wikipedia.                
+                info = this.getWikipediaInfo(data);
+                if (info !== null) {
+                    this.setState({ placeInfo: info });                    
                 } else {
                     this.setState({ placeInfo: 'It\'s mystery place! We couldn\'t get more information!' });
-                    this.populateInfoWindow(marker);
                 }
-                }
+                this.populateInfoWindow(marker);
+                this.setActiveMarkerAnimation(google.maps.Animation.BOUNCE);
             }).catch(error => {
                 this.setState({ placeInfo: 'Oops... Something went wrong.' });
                 this.populateInfoWindow(marker);
             });           
     };
 
-    // Display places on the map.
-    populatePlaces() {
-        this.clearMarkersMap();
-
-        // addEventListener function sets 'this' by itself. I want to keep 'this' at THIS component.
-        var _this = this;       
-        var placesList = this.setPlacesList();
-        this.setMarkers(placesList);
-
-        placesList.addEventListener('click', function (event) {
-            var placeId = event.target.id;
-            _this.map.setZoom(12);
-            var match = (_this.markers.filter(m => m.title === placeId));
-            _this.map.setCenter(match[0].position);
-            _this.requestMoreInfo(match[0]);
-            match[0].setAnimation(google.maps.Animation.DROP);
-        });
-    }
-
-    // Sets all markers map to null
-    clearMarkersMap = () => {
-        if (this.markers.length !== 0) {
-            this.markers.forEach(function (marker) {
-                marker.setMap(null);
-            });
+    // The function go through all properties of the object, then set info variable with proper data.
+    getWikipediaInfo = (data) => {
+        for (var [key, value] of Object.entries(data.query.pages)) {
+            if (key !== '-1') {
+                return value.extract;                
+            }
+            return null;
         }
     }
 
     // Reinitialize places list element. It's necessery to clear all events listeners. 
     // Otherwise the event listeners was added multiply.
-    setPlacesList = () => {
+    clearPlacesList = () => {
         var placesList = document.getElementById('places-list');
         placesList.innerHTML = '';
         var newPlacesList = placesList.cloneNode(true);
@@ -163,42 +191,42 @@ class GoogleMap extends React.Component {
         return newPlacesList;
     }
 
-    // For each coordinate set marker and add event listener.
-    setMarkers = (placesListElement) => {
-        var _this = this;
-        var markers = [];
-        this.state.coordinates.forEach(function (place) {
-            var marker = new google.maps.Marker({
-                position: place.location,
-                map: _this.map,
-                title: place.title,
-                icon: MarkerIcon
-            });
-            markers.push(marker);
-            marker.addListener('click', function () {
-                _this.requestMoreInfo(marker);
-            });
-            var placeItem = _this.createPlaceItemElement(place.title);
-            placesListElement.appendChild(placeItem);
-        });
-        _this.markers = markers;
+    // Append place to list.
+    addPlaceToList = (place, placesList) => {
+        const placeItem = this.createPlaceItemElement(place.title);
+        placesList.appendChild(placeItem);
     }
 
     // Creates place element.
     createPlaceItemElement = (placeTitle) => {
         var placeItem = document.createElement('li');
         placeItem.className = 'place';
+        placeItem.setAttribute('role', 'listitem');
+        placeItem.setAttribute('aria-label', placeTitle);
         placeItem.id = placeTitle;
         placeItem.textContent = placeTitle;
         return placeItem;
     }
 
+    applyFilter = () => {
+        var _this = this;
+        var showMarkers = this.markers.filter(m => (this.state.coordinates.find(c => c.title === m.title)));
+        this.markers.forEach(function (item) {
+            if (!showMarkers.includes(item)) {
+                item.setMap(null);
+            } else {
+                item.setMap(_this.map);
+            }
+        });
+        this.setPlacesList();
+    }
+
     render() {
         if (this.state.isInitialized) {
-            this.populatePlaces();
+            this.applyFilter();
         }      
         return (
-            <div id="map" ref="map" />
+            <div id="map" ref="map" role="application"/>
         );
     };
 }

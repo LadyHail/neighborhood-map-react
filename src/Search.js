@@ -28,11 +28,12 @@ class Search extends React.Component {
     render() {
         return (
                 <input
-                    type="text"
-                    className="search-box"
-                    placeholder="ex. park"
-                    value={this.state.query}
-                    onChange={(event => this.updateQuery(event.target.value))}
+                type="text"
+                className="search-box"
+                aria-label="Search"
+                placeholder="ex. park"
+                value={this.state.query}
+                onChange={(event => this.updateQuery(event.target.value))}                
                 />
             )
     }
