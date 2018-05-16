@@ -125,7 +125,6 @@ class GoogleMap extends React.Component {
         var info = '';
         const FETCH_TIMEOUT = 2000;
         let isTimedOut = false;
-        var _this = this;
 
         new Promise(function (resolve, reject) {
             const timeout = setTimeout(function () {
