@@ -2,7 +2,7 @@
 # Overview
 The final project for Google Front-End Web Developer Nanodegree Scholarship by Udacity.
 The application uses Google Map API and Wikipedia API. 
-Purpose of this project is to demonstrate a good understanding of React.JS, JavaScript, HTML, CSS, API usage, Responsive Web Design.
+Purpose of this project is to demonstrate a good understanding of React.JS, JavaScript, HTML, CSS, RESTful API, Responsive Web Design.
 
 # How to run
 The application requires Node.js to run.

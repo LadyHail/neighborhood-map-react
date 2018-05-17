@@ -32,7 +32,7 @@ class Header extends React.Component {
         return (
             <header className="header">
                 <button className="menu-btn" onClick={this.toggleList}>Show / hide list</button>
-                <h1 className="header-title">My places</h1>
+                <h1 className="header-title">Lower Silesia Places</h1>
             </header>
             )
     }

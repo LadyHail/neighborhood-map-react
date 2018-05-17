@@ -112,10 +112,14 @@ class GoogleMap extends React.Component {
 
     // Display infoWindow element, just above clicked marker.
     populateInfoWindow(marker) {
+        const _this = this;
         if (this.infoWindow.marker !== marker) {
             this.infoWindow.marker = marker;
             this.infoWindow.setContent(this.setInfoWindowContent(marker.title));
             this.infoWindow.open(this.map, marker);
+            this.infoWindow.addListener('closeclick', function () {
+                _this.setActiveMarkerAnimation(null);
+            });
         }
     }
 
@@ -158,7 +162,8 @@ class GoogleMap extends React.Component {
             // data returns object that contains pageid which is unique for each article at Wikipedia.                
                 info = this.getWikipediaInfo(data);
                 if (info !== null) {
-                    this.setState({ placeInfo: info });                    
+                    this.setState({ placeInfo: info });
+                    this.setPlaceDetails(marker.title, info);
                 } else {
                     this.setState({ placeInfo: 'It\'s mystery place! We couldn\'t get more information!' });
                 }
@@ -177,6 +182,14 @@ class GoogleMap extends React.Component {
                 return value.extract;                
             }
             return null;
+        }
+    }
+
+    // Set details of place retrived from Wikipedia. So only one fetch is needed per place.
+    setPlaceDetails = (title, info) => {
+        const coord = this.state.coordinates.find(c => c.title === title);
+        if (coord.details === '') {
+            coord.details = info;
         }
     }
 
@@ -207,6 +220,7 @@ class GoogleMap extends React.Component {
         return placeItem;
     }
 
+    // Display filtered places.
     applyFilter = () => {
         var _this = this;
         var showMarkers = this.markers.filter(m => (this.state.coordinates.find(c => c.title === m.title)));
